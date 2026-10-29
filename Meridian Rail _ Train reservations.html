@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>Meridian Rail | Train reservations</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Manrope:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>:root{color-scheme:dark;--bg:#0b0c10;--panel:#14161d;--panel2:#1b1e27;--line:#272b37;--ink:#f1ede4;--mute:#989cab;--gold:#d9b36c;--gold2:#f0d9a6;--ok:#62d6a3;--warn:#f0b35a;--bad:#ff7b7b;--r:14px;--fh:'Fraunces',Georgia,serif;--fb:'Manrope',system-ui,sans-serif;--fm:'DM Mono',ui-monospace,monospace}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{font:16px/1.6 var(--fb);background:var(--bg);color:var(--ink);min-height:100vh;display:flex;flex-direction:column}
+main{flex:1}
+h1,h2,h3,h4{font-family:var(--fh);font-weight:500;line-height:1.1;letter-spacing:-.01em}
+a{color:var(--gold)}
+.wrap{width:min(1180px,100% - 40px);margin-inline:auto}
+.muted,small{color:var(--mute)}
+code{font-family:var(--fm);background:var(--panel2);padding:1px 6px;border-radius:5px;font-size:.88em}
+::selection{background:var(--gold);color:#1a1405}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* header */
+.top{position:sticky;top:0;z-index:20;background:#0b0c10d9;backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;justify-content:space-between;height:64px;gap:16px}
+.brand{display:flex;align-items:center;gap:10px;font:italic 500 26px var(--fh);text-decoration:none;color:var(--ink)}
+.mark{color:var(--gold);font-style:normal;font-size:18px}
+#nav{display:flex;align-items:center;gap:2px}
+#nav a:not(.btn){padding:8px 13px;text-decoration:none;color:var(--mute);font-size:14px;font-weight:500;border-radius:99px}
+#nav a:not(.btn):hover{color:var(--ink);background:var(--panel2)}
+.burger{display:none;background:none;border:0;color:var(--ink);font-size:24px;cursor:pointer}
+
+/* controls */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--gold);color:#1a1405;font:700 14px var(--fb);letter-spacing:.01em;border:0;border-radius:99px;padding:10px 20px;cursor:pointer;text-decoration:none;transition:background .15s,transform .15s}
+.btn:hover{background:var(--gold2);transform:translateY(-1px)}
+.btn.lg{padding:14px 28px;font-size:15px}.btn.sm{padding:6px 14px;font-size:12.5px}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.ghost:hover{border-color:var(--gold);background:transparent}
+.btn.dark{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
+.btn.dark:hover{border-color:var(--gold);background:var(--panel2)}
+.btn.green{background:var(--ok);color:#06241a}
+.btn.danger{background:transparent;color:var(--bad);border:1px solid #5b2d2d}
+.btn.danger:hover{background:#2a1517}
+.btn[disabled]{opacity:.35;pointer-events:none}
+.lnk{background:none;border:0;color:var(--gold);font:600 14px var(--fb);cursor:pointer;text-decoration:underline;padding:0}
+label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:600;color:var(--mute);letter-spacing:.04em;text-transform:uppercase}
+input,select,textarea{font:500 15px var(--fb);color:var(--ink);padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);width:100%;text-transform:none;letter-spacing:0}
+input::placeholder,textarea::placeholder{color:#5e6272}
+input:focus,select:focus,textarea:focus{border-color:var(--gold);outline:none;box-shadow:0 0 0 3px #d9b36c22}
+textarea{min-height:100px;resize:vertical}
+select option{background:#1b1e27}
+.stack{display:grid;gap:16px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.row4{display:grid;grid-template-columns:90px 1fr 1fr 80px;gap:12px}
+.err{color:var(--bad);font-size:13px;font-weight:600;min-height:18px;text-transform:none;letter-spacing:0}
+
+/* hero */
+.hero{padding:56px 0 120px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(60% 80% at 80% 30%,#d9b36c14,transparent 70%);pointer-events:none}
+.hero-in{display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:center;position:relative}
+.hero h1{font-size:clamp(52px,8.4vw,112px);font-weight:400;letter-spacing:-.03em}
+.hero h1 em{color:var(--gold);font-weight:400}
+.hero p{margin-top:20px;color:var(--mute);font-size:18px;max-width:38ch}
+.map{width:100%;height:auto}
+.map path{fill:none;stroke:#363b4c;stroke-width:1.2;stroke-dasharray:3 6}
+.map .cd{fill:var(--gold)}
+.map text{fill:var(--mute);font:500 12px var(--fm);letter-spacing:.06em}
+.map .plane{fill:var(--gold2);filter:drop-shadow(0 0 6px var(--gold))}
+.pull{margin-top:-64px;position:relative;z-index:2}
+.search{display:grid;grid-template-columns:1.3fr 38px 1.3fr 1fr 1fr .8fr auto;align-items:stretch;background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:10px;box-shadow:0 30px 60px #0009}
+.search .f{padding:10px 16px;border-right:1px solid var(--line);justify-content:center;gap:2px}
+.search .f:nth-of-type(2){border-left:0}
+.search .f span{font-size:11px;color:var(--mute)}
+.search .f input,.search .f select{background:transparent;border:0;padding:4px 0;font:500 17px var(--fh);box-shadow:none;border-radius:0}
+.search .f input[type=date]{font-family:var(--fb);font-size:15px}
+.swap{align-self:center;border:1px solid var(--line);background:var(--panel2);color:var(--gold);border-radius:50%;width:34px;height:34px;cursor:pointer;margin-left:-1px;z-index:1}
+.swap:hover{border-color:var(--gold)}
+.search .go{align-self:center;margin-left:12px;white-space:nowrap}
+.search .f:nth-of-type(3){border-right:1px solid var(--line)}
+
+.cols{display:grid;grid-template-columns:1fr 310px;gap:36px;margin:40px auto 70px;align-items:start}
+.sec-h{display:flex;justify-content:space-between;align-items:baseline;margin:4px 0 16px;gap:10px;flex-wrap:wrap}
+.sec-h h2{font-size:32px;font-weight:400}
+.sec-h h3{font-size:24px;font-weight:400}
+.panel{background:var(--panel);border-radius:var(--r);padding:22px;border:1px solid var(--line)}
+.panel+.panel{margin-top:16px}
+.panel h3{font-size:22px;font-weight:400}
+.live{display:inline-flex;align-items:center;gap:7px;font:500 12px var(--fm);color:var(--ok)}
+.live::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--ok);animation:pulse 1.6s infinite}
+@keyframes pulse{50%{opacity:.2}}
+.toolbar{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.toolbar label{text-transform:none;letter-spacing:0;font-size:14px;color:var(--mute)}
+.toolbar select{width:auto;padding:8px 12px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:transparent;border-radius:99px;padding:6px 14px;font:600 13px var(--fb);cursor:pointer;color:var(--mute)}
+.chip:hover{border-color:var(--gold);color:var(--ink)}
+.chip.on{background:var(--gold);color:#1a1405;border-color:var(--gold)}
+
+/* flight strips */
+.strip{display:grid;grid-template-columns:78px minmax(70px,1fr) 78px 1.5fr 150px;gap:18px;align-items:center;padding:22px 6px;border-bottom:1px solid var(--line);transition:background .15s}
+.strip:first-of-type{border-top:1px solid var(--line)}
+.strip:hover{background:linear-gradient(90deg,transparent,#d9b36c0a,transparent)}
+.st-t b{display:block;font:400 32px var(--fh);letter-spacing:-.02em;line-height:1}
+.st-t span{font:500 12px var(--fm);color:var(--gold);letter-spacing:.1em}
+.st-t.r{text-align:right}
+.st-t sup{font-size:12px;color:var(--bad);font-family:var(--fm)}
+.st-p{display:flex;align-items:center;gap:8px}
+.st-p i{flex:1;border-top:1px dashed #3b4052}
+.st-p em{font:500 12px var(--fm);color:var(--mute);font-style:normal;white-space:nowrap}
+.st-i{display:flex;gap:12px;align-items:center}
+.st-i b{display:block;font-size:15px}
+.meta{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.st-b{text-align:right;display:grid;gap:2px;justify-items:end}
+.st-b b{font:400 30px var(--fh)}
+.st-b .btn{margin-top:8px}
+.logo{width:40px;height:40px;border-radius:50%;color:#fff;display:grid;place-items:center;font:600 13px var(--fm);flex:none;border:2px solid #ffffff22}
+.al{display:flex;align-items:center;gap:12px}
+.al b{display:block;font-size:15px}
+.tag{font:500 12px var(--fm);background:var(--panel2);color:var(--mute);padding:3px 10px;border-radius:99px;border:1px solid var(--line)}
+.pill{font:500 11.5px var(--fm);padding:2px 9px;border-radius:99px;display:inline-block;border:1px solid}
+.pill.ok{color:var(--ok);border-color:#2a5545}.pill.warn{color:var(--warn);border-color:#5d4521}.pill.bad{color:var(--bad);border-color:#5b2d2d}
+.empty{text-align:center;padding:48px 20px;border:1px dashed #333847;border-radius:var(--r);color:var(--mute)}
+.route{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center}
+.route b{font:400 28px var(--fh);display:block;line-height:1.1}
+.route .r{text-align:right}
+.route sup{font-size:11px;color:var(--bad)}
+.line{border-top:1px dashed #3b4052;position:relative;text-align:center;height:0;min-width:70px}
+.line span{position:relative;top:-11px;background:var(--panel);padding:0 8px;font:500 12px var(--fm);color:var(--mute)}
+
+/* booking */
+.page{padding:36px 0 70px}
+.crumb{display:inline-block;margin-bottom:18px;color:var(--mute);text-decoration:none;font-weight:600;font-size:14px}
+.crumb:hover{color:var(--gold)}
+.stepper{display:flex;gap:28px;margin-bottom:28px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.stepper span{padding:0 0 12px;font:500 14px var(--fb);color:var(--mute);border-bottom:2px solid transparent;margin-bottom:-1px}
+.stepper .on{color:var(--gold);border-color:var(--gold)}
+.stepper .done{color:var(--ok)}
+.bk{display:grid;grid-template-columns:1fr 340px;gap:30px;align-items:start}
+.bk h3{font-size:28px;font-weight:400}
+.pax{border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px;background:var(--panel2)}
+.pax h4{margin-bottom:12px;font-size:18px;font-weight:400}
+.pax input,.pax select{background:var(--panel)}
+.sum{position:sticky;top:84px}
+.sum dl{display:grid;grid-template-columns:1fr auto;gap:8px 12px;margin-top:14px;font-size:15px;color:var(--mute)}
+.sum dd{text-align:right;font-weight:600;margin:0;color:var(--ink)}
+.sum .tot{border-top:1px solid var(--line);padding-top:12px;font:400 24px var(--fh);color:var(--ink)}
+.cabin{background:var(--panel);border:1px solid var(--line);border-radius:90px 90px 20px 20px;padding:40px 20px 20px;max-width:390px;margin:14px auto}
+.cabin h4{text-align:center;margin-bottom:14px;font:500 13px var(--fm);color:var(--mute);letter-spacing:.06em}
+.srw{display:flex;justify-content:center;align-items:center;gap:6px;margin-bottom:6px}
+.rn{width:22px;text-align:center;font:500 11px var(--fm);color:#5e6272}
+.gap{width:22px;flex:none}
+.sbtn{width:34px;height:36px;border-radius:9px 9px 4px 4px;border:1px solid #363b4c;background:#232734;font:500 11px var(--fm);cursor:pointer;color:var(--mute);padding:0;transition:background .12s,border-color .12s}
+.sbtn:hover{border-color:var(--gold);color:var(--ink)}
+.sbtn.sel{background:var(--gold);border-color:var(--gold);color:#1a1405;font-weight:700}
+.sbtn.tk{background:#101218;border-color:#1b1e27;color:#3b3f4d;cursor:not-allowed}
+.sbtn.blk{background:repeating-linear-gradient(45deg,#3a2326 0 4px,#14161d 4px 8px);border-color:#5b2d2d;color:#8c5b5b}
+.sbtn.ph{visibility:hidden}
+.legend{display:flex;gap:16px;justify-content:center;font-size:13px;color:var(--mute);flex-wrap:wrap;margin-top:10px}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:6px;border:1px solid #363b4c}
+.picks{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.pm{display:grid;gap:10px;margin-bottom:18px}
+.pm label{flex-direction:row;align-items:flex-start;gap:14px;border:1px solid var(--line);padding:14px 16px;border-radius:12px;cursor:pointer;color:var(--ink);font-weight:500;font-size:15px;text-transform:none;letter-spacing:0;background:var(--panel2)}
+.pm label:has(input:checked){border-color:var(--gold)}
+.pm input{width:auto;margin-top:5px;accent-color:var(--gold)}.pm b{display:block}
+.spin{width:44px;height:44px;border:4px solid var(--line);border-top-color:var(--gold);border-radius:50%;animation:sp .8s linear infinite;margin:10px auto 16px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.auth{max-width:450px;margin:56px auto}
+.auth h1{font-size:42px;font-weight:400;margin-bottom:8px}
+.auth form{margin-top:22px}
+.auth.staff{border-color:var(--gold);box-shadow:0 0 0 1px #d9b36c44}
+.alt{margin-top:18px;font-size:14px;display:flex;justify-content:space-between;gap:10px}.alt a{font-weight:600}
+.stars-in{display:flex;gap:2px}
+.stars-in button{background:none;border:0;font-size:34px;line-height:1;cursor:pointer;color:#343847;padding:0 3px}
+.stars-in button.on{color:var(--gold)}
+.stars{color:var(--gold);letter-spacing:1px}
+
+/* boarding pass */
+.pass{display:grid;grid-template-columns:1fr 230px;background:var(--panel);border:1px solid var(--line);border-radius:20px;position:relative;box-shadow:0 24px 50px #0008;max-width:920px;margin:0 auto 24px}
+.p-band{grid-column:1/-1;color:#fff;border-radius:19px 19px 0 0;padding:14px 28px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.p-band b{font:italic 500 20px var(--fh)}
+.p-main{padding:26px 28px;border-right:1px dashed #3b4052}
+.p-stub{padding:24px 20px;display:flex;flex-direction:column;gap:14px;justify-content:space-between;background:var(--panel2);border-radius:0 0 19px 0}
+.pass .n1,.pass .n2{position:absolute;right:219px;width:26px;height:26px;border-radius:50%;background:var(--bg);border:1px solid var(--line)}
+.pass .n1{top:46px}.pass .n2{bottom:-13px}
+.codes{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-bottom:18px}
+.codes h2{font:400 64px var(--fh);letter-spacing:-.03em}.codes .r{text-align:right}.codes small{display:block}
+.pnr{font:500 28px var(--fm);letter-spacing:.1em;color:var(--gold)}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:16px 0}
+.grid4 small{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em}.grid4 b{font:500 16px var(--fm)}
+.bars{width:100%;height:54px;fill:var(--ink)}
+.badge{display:inline-block;font:500 11.5px var(--fm);padding:3px 11px;border-radius:99px;background:var(--panel2);color:var(--mute);border:1px solid var(--line)}
+.badge.Confirmed,.badge.Paid,.badge.OnTime,.badge.Scheduled{color:var(--ok);border-color:#2a5545;background:#12261f}
+.badge.Delayed{color:var(--warn);border-color:#5d4521;background:#2a2113}
+.badge.Cancelled{color:var(--bad);border-color:#5b2d2d;background:#2a1517}
+.banner{background:#2a2113;border:1px solid #5d4521;color:var(--gold2);padding:14px 18px;border-radius:12px;margin-bottom:16px;font-weight:500}
+.banner.bad{background:#2a1517;border-color:#5b2d2d;color:#ffb3b3}
+.stamp{position:absolute;top:40%;left:20%;transform:rotate(-12deg);border:4px solid var(--bad);color:var(--bad);font:600 54px var(--fh);padding:2px 22px;border-radius:12px;opacity:.55;pointer-events:none}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:12px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 11px var(--fm);color:var(--mute);letter-spacing:.08em;text-transform:uppercase;background:var(--panel2)}
+tr.hl td{background:#2a2113;color:var(--gold2)}
+.trip{display:grid;grid-template-columns:84px 1fr auto;gap:20px;align-items:center;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--c);border-radius:var(--r);padding:16px 20px;margin-bottom:12px}
+.trip .d{font:500 12px var(--fm);text-align:center;line-height:1.2;color:var(--mute);letter-spacing:.1em}.trip .d b{display:block;font:400 38px var(--fh);color:var(--ink);letter-spacing:0}
+
+/* tabs, tables, admin */
+.tabs{display:flex;gap:26px;margin-bottom:24px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.tabs button{border:0;background:none;padding:0 0 12px;font:600 14px var(--fb);cursor:pointer;color:var(--mute);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button:hover{color:var(--ink)}
+.tabs .on{color:var(--gold);border-color:var(--gold)}
+.scroll{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);margin-bottom:18px}
+.scroll table{min-width:680px}
+.acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:16px 0 26px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.stat b{display:block;font:400 32px var(--fh);color:var(--gold2)}
+.filters{display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:16px}
+.filters label{width:190px}
+.hbar{display:grid;grid-template-columns:150px 1fr 100px;gap:12px;align-items:center;margin:10px 0;font-size:14px}
+.hbar i{display:block;height:10px;border-radius:5px;background:var(--c);min-width:2px}
+.days{display:flex;gap:12px;flex-wrap:wrap}.days label{flex-direction:row;align-items:center;gap:6px;font-weight:500;color:var(--ink);text-transform:none;letter-spacing:0;font-size:14px}.days input{width:auto;accent-color:var(--gold)}
+.fb{padding:16px 0;border-top:1px solid var(--line)}.fb:first-of-type{border-top:0}
+.fb header{display:flex;justify-content:space-between;gap:8px;font-size:14px}
+.reply{margin-top:10px;background:var(--panel2);border-left:3px solid var(--gold);padding:10px 14px;border-radius:6px;font-size:14px}
+.adm{display:grid;grid-template-columns:220px 1fr;gap:34px;align-items:start}
+.rail{position:sticky;top:88px;display:grid;gap:2px;border-right:1px solid var(--line);padding-right:18px}
+.rail h3{font:italic 400 22px var(--fh);margin-bottom:14px;color:var(--gold)}
+.rail-b{text-align:left;background:none;border:0;border-left:2px solid transparent;color:var(--mute);font:600 14px var(--fb);padding:10px 14px;cursor:pointer;border-radius:0 8px 8px 0}
+.rail-b:hover{color:var(--ink);background:var(--panel)}
+.rail-b.on{color:var(--gold);border-color:var(--gold);background:var(--panel)}
+.adm-main{min-width:0}
+
+.modal{position:fixed;inset:0;background:#000000b3;display:none;align-items:center;justify-content:center;padding:16px;z-index:50;overflow:auto;backdrop-filter:blur(4px)}
+.modal.on{display:flex}
+.mbox{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:28px;width:min(500px,100%);position:relative;max-height:92vh;overflow:auto}
+.mbox.wide{width:min(780px,100%)}
+.mbox h3{font-size:28px;font-weight:400;margin-bottom:12px}
+.mbox .x{position:absolute;right:14px;top:8px;background:none;border:0;font-size:28px;cursor:pointer;color:var(--mute)}
+.mail pre{white-space:pre-wrap;font:13.5px/1.7 var(--fm);background:var(--panel2);padding:16px;border-radius:10px;margin-top:10px;color:var(--ink)}
+#toasts{position:fixed;bottom:20px;right:20px;display:grid;gap:8px;z-index:60}
+.toast{background:var(--panel2);color:var(--ink);padding:13px 20px;border-radius:12px;font-weight:600;font-size:14px;box-shadow:0 10px 30px #000a;border:1px solid var(--line);border-left:3px solid var(--gold)}
+.toast.err{border-left-color:var(--bad)}
+.foot{border-top:1px solid var(--line);color:var(--mute);padding:22px 0;font-size:13px}
+.foot .wrap{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}.foot a{color:var(--gold)}
+
+@media(max-width:1000px){
+ .hero-in,.cols,.bk{grid-template-columns:1fr}
+ .map{max-width:460px}
+ .search{grid-template-columns:1fr 1fr;gap:4px}.search .f{border-right:0;border-bottom:1px solid var(--line)}.swap{display:none}.search .go{grid-column:1/-1;margin:10px 0 0}
+ .sum{position:static}
+ .pass{grid-template-columns:1fr}.p-main{border-right:0;border-bottom:1px dashed #3b4052}
+ .p-stub{border-radius:0 0 19px 19px}.pass .n1,.pass .n2{display:none}
+ .grid4{grid-template-columns:1fr 1fr}
+ .trip{grid-template-columns:70px 1fr}.trip .acts{grid-column:1/-1}
+ .adm{grid-template-columns:1fr;gap:16px}
+ .rail{position:static;display:flex;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:0 0 8px}.rail h3{display:none}
+ .rail-b{white-space:nowrap;border-left:0;border-bottom:2px solid transparent;border-radius:8px 8px 0 0}.rail-b.on{border-bottom-color:var(--gold)}
+}
+@media(max-width:760px){
+ .burger{display:block}
+ #nav{display:none;position:absolute;top:64px;left:0;right:0;background:var(--bg);border-bottom:1px solid var(--line);flex-direction:column;align-items:stretch;padding:12px 20px 18px}
+ body.menu #nav{display:flex}
+ .strip{grid-template-columns:70px 1fr 70px;row-gap:14px}.st-i{grid-column:1/-1}.st-b{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;text-align:left}.st-b .btn{margin:0}
+ .row2,.search{grid-template-columns:1fr}
+ .row4{grid-template-columns:1fr 1fr}.row4 label:nth-child(2),.row4 label:nth-child(3){grid-column:1/-1}
+ .codes h2{font-size:42px}
+ .hbar{grid-template-columns:100px 1fr 80px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.plane{display:none}}
+@media print{
+ :root{--bg:#fff;--panel:#fff;--panel2:#f3f3f3;--line:#999;--ink:#000;--mute:#444;--gold:#7a5a14}
+ .top,.foot,.no-print,.tabs,.filters,#toasts{display:none!important}
+ body{background:#fff;color:#000}.page{padding:0}
+ .pass{box-shadow:none;border:1px solid #888;break-inside:avoid;page-break-after:always;margin-bottom:0}
+ .pass:last-of-type{page-break-after:auto}
+ .pass .n1,.pass .n2{display:none}
+ *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+
+.strip.tr .cls{grid-column:auto}
+@media(min-width:761px){.strip.tr{grid-template-columns:78px minmax(60px,1fr) 78px 1.2fr 1.7fr}}
+.cls{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+@media(max-width:760px){.strip.tr .cls{grid-column:1/-1;justify-content:flex-start}}
+.cb{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;color:var(--ink);cursor:pointer;text-align:center;font:inherit;min-width:74px}
+.cb small{display:block;font:500 11px var(--fm)}.cb b{font:400 18px var(--fh);display:block}.cb span{font:500 11px var(--fm)}
+.cb.ok span{color:var(--ok)}.cb.warn span{color:var(--warn)}.cb.bad span{color:var(--bad)}.cb:hover{border-color:var(--gold)}.cb[disabled]{opacity:.4;pointer-events:none}
+.coach{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}.coach .sbtn{width:62px;height:54px;line-height:1.25}
+.badge.Pending{color:var(--warn);border-color:#5d4521;background:#2a2113}.badge.Refunded,.badge.Requested{color:var(--ok);border-color:#2a5545}
+.badge.Requested{color:var(--warn);border-color:#5d4521}
+@media print{.n1,.n2{display:none}}
+
+/* ===== Trainy-style light theme ===== */
+:root{color-scheme:light;--bg:#f3f1ff;--panel:#fff;--panel2:#f3f1ff;--line:#e2dff6;--ink:#2f3590;--mute:#7b80b4;--gold:#ff2f6e;--gold2:#ff5c8d;--ok:#16a06f;--warn:#c9790f;--bad:#e5484d;--fh:'Montserrat',system-ui,sans-serif;--fb:'Montserrat',system-ui,sans-serif}
+body{background:linear-gradient(#fff2f7 0,#f3f1ff 360px) no-repeat,#f3f1ff}
+h1,h2,h3,h4{font-weight:600;letter-spacing:0}
+::selection{color:#fff}
+.top{background:#ffffffd9;border-bottom:1px solid #ece9fb}
+.brand{font:800 21px var(--fh);color:var(--gold);letter-spacing:-.01em}.mark{display:none}
+#nav a:not(.btn){color:var(--mute);font-weight:600}#nav a:not(.btn):hover{color:var(--ink);background:#ece9fb}
+#nav a.btn,#nav .btn.ghost{background:transparent;color:var(--gold);border:1px solid var(--gold)}#nav a.btn:hover,#nav .btn.ghost:hover{background:var(--gold);color:#fff}
+.btn{color:#fff;font-family:var(--fb)}.btn:hover{background:var(--gold2)}
+.btn.ghost{color:var(--ink)}.btn.ghost:hover{border-color:var(--gold)}.btn.dark{color:var(--ink);background:#fff}
+.btn.green{color:#fff}.btn.danger{border-color:#f5c2c5}.btn.danger:hover{background:#fff0f1}
+input::placeholder,textarea::placeholder{color:#a9acd0}select option{background:#fff}
+input,select,textarea{background:#fff}input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px #ff2f6e22}
+.hero2{padding:58px 0 8px;text-align:center}
+.hero2 h1{font:800 clamp(28px,5.2vw,52px)/1.15 var(--fh);text-transform:uppercase;letter-spacing:.07em;color:var(--ink)}
+.hero2 p{margin:14px auto 0;color:var(--ink);font-size:17px;max-width:60ch;font-weight:500}
+.hero2 .search{margin:30px auto 0;max-width:1100px;text-align:left;box-shadow:0 14px 40px #4b52b81f;border-color:#ece9fb;border-radius:999px;padding:8px 8px 8px 14px}
+.search .f{border-right:1px solid #ece9fb}.search .f input,.search .f select{font:600 15px var(--fb);color:var(--ink)}
+.search .f input[type=date]{font-size:14px}
+.btn.round{width:46px;height:46px;padding:0;border-radius:50%;font-size:18px;margin-left:10px;align-self:center}
+.swap{background:#fff;color:var(--gold)}
+#scene{margin-top:-6px}.scene{display:block;width:100%;height:auto;max-height:330px}
+.trainmv{animation:mv 20s linear infinite}@keyframes mv{from{transform:translateX(1250px)}to{transform:translateX(-720px)}}
+.logos{display:flex;gap:18px 44px;justify-content:center;flex-wrap:wrap;padding:26px 0;background:#ece9fb;width:100%;max-width:none;margin:0}
+.logos span{font:800 13px var(--fh);letter-spacing:.14em;text-transform:uppercase;color:#a3a7d6}
+.panel,.strip,.scroll,.stat,.trip,.pass,.mbox{box-shadow:0 6px 24px #4b52b814}
+.strip{box-shadow:none}.strip:hover{background:linear-gradient(90deg,transparent,#ff2f6e0c,transparent)}
+.st-t b,.st-b b{font-weight:600}
+.st-p i,.line{border-color:#cfcbec}.line span{background:#fff}
+.pill.ok{border-color:#9fe0c5}.pill.warn{border-color:#f0c98a}.pill.bad{border-color:#f2b3b6}
+.badge{background:#f3f1ff}
+.badge.Confirmed,.badge.Paid,.badge.OnTime,.badge.Scheduled{background:#e4f8f0;border-color:#9fe0c5}
+.badge.Pending,.badge.Delayed,.badge.Requested{background:#fff4e0;border-color:#f0c98a;color:var(--warn)}
+.badge.Cancelled{background:#ffe9ea;border-color:#f2b3b6}.badge.Refunded{background:#e4f8f0;border-color:#9fe0c5;color:var(--ok)}
+.banner{background:#fff4e0;border-color:#f0c98a;color:#8a5a00}.banner.bad{background:#ffe9ea;border-color:#f2b3b6;color:#b4232a}
+.sbtn{background:#f1efff;border-color:#d4d1f0;color:var(--ink)}.sbtn:hover{border-color:var(--gold)}
+.sbtn.sel{color:#fff}.sbtn.tk{background:#e6e4f4;border-color:#e6e4f4;color:#b3b0cc}
+.cb{background:#f3f1ff;border-color:#e2dff6}.cb:hover{border-color:var(--gold)}
+.stat b{color:var(--ink)}
+.chip:hover{color:var(--ink)}.chip.on{color:#fff}
+.stepper .on,.tabs .on{color:var(--gold)}
+.pass .n1,.pass .n2{background:#f3f1ff}.p-main{border-right-color:#cfcbec}.p-stub{background:#f3f1ff}.bars{fill:var(--ink)}
+th{background:#f3f1ff}.rail-b:hover,.rail-b.on{background:#fff}
+.modal{background:#2f359066}.toast{background:#fff;box-shadow:0 10px 30px #4b52b833}
+.mail pre{background:#f3f1ff}
+.foot{border-top-color:#e2dff6}
+@media(max-width:1000px){.hero2 .search{border-radius:24px;padding:10px}.btn.round{width:100%;border-radius:99px;height:44px;margin:10px 0 0}}
+@media print{:root{--bg:#fff;--panel:#fff}body{background:#fff}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap bar"><a class="brand" href="#/home"><span class="mark">🚆</span>Meridian Rail</a>
+<button class="burger" onclick="document.body.classList.toggle('menu')" aria-label="Menu">☰</button><nav id="nav"></nav></div></header>
+<main id="app"></main>
+<footer class="foot"><div class="wrap"><span>Meridian Rail. A demo: your data stays in this browser.</span><a href="#/login">Staff login</a></div></footer>
+<div id="modal" class="modal" onclick="if(event.target===this)closeModal()"></div>
+<div id="toasts"></div>
+<script>
+'use strict';
+/* Meridian Rail: online train reservation. Front-end demo, data kept in localStorage. */
+const KEY = 'meridian_rail_v1', $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = p => p + Math.random().toString(36).slice(2, 8).toUpperCase();
+const hs = s => { let h = 5381; for (const c of s) h = ((h << 5) + h + c.charCodeAt(0)) | 0; return 'h' + (h >>> 0).toString(36); }; // demo hash only
+const inr = n => '₹' + Number(n).toLocaleString('en-IN');
+const iso = d => d.toISOString().slice(0, 10), today = () => iso(new Date());
+const plus = n => { const d = new Date(); d.setDate(d.getDate() + n); return iso(d); };
+const fmtD = d => new Date(d + 'T00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+const fmtDT = s => new Date(s).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+const tm = m => { m = ((m % 1440) + 1440) % 1440; return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
+const mins = t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+const dur = m => Math.floor(m / 60) + 'h ' + (m % 60) + 'm';
+const CL = { SL: 'Sleeper', '3A': 'AC 3-Tier', '2A': 'AC 2-Tier' }, CK = Object.keys(CL), RAC = 3, WLMAX = 10, BT = ['LB', 'MB', 'UB', 'LB', 'MB', 'UB', 'SL', 'SU'];
+
+/* ---------- seed ---------- */
+function mk(no, name, zone, d1, d2, stops, cap) {
+  const T = stops.at(-1)[1], K = stops.at(-1)[2], f = s => s.map(x => ({ c: x[0], t: x[1], km: x[2] }));
+  return [{ id: 'T' + no, no, name, zone, dep: d1, stops: f(stops), cap, active: true },
+  { id: 'T' + (no + 1), no: no + 1, name: name + ' (Return)', zone, dep: d2, stops: f(stops.map(x => [x[0], T - x[1], K - x[2]]).reverse()), cap, active: true }];
+}
+function seed() {
+  const stations = [['MAS', 'Chennai Central'], ['KPD', 'Katpadi'], ['SBC', 'Bengaluru City'], ['MYS', 'Mysuru'], ['SA', 'Salem'], ['ED', 'Erode'], ['CBE', 'Coimbatore'], ['NLR', 'Nellore'], ['BZA', 'Vijayawada'], ['SC', 'Secunderabad'], ['NGP', 'Nagpur'], ['BPL', 'Bhopal'], ['NDLS', 'New Delhi']].map(a => ({ c: a[0], name: a[1] }));
+  const c1 = { SL: 12, '3A': 8, '2A': 6 }, c2 = { SL: 16, '3A': 10, '2A': 6 };
+  const trains = [
+    ...mk(12007, 'Mysuru Express', 'SR', '06:00', '15:30', [['MAS', 0, 0], ['KPD', 95, 122], ['SBC', 300, 362], ['MYS', 430, 497]], c1),
+    ...mk(12675, 'Kovai Express', 'SR', '22:00', '21:00', [['MAS', 0, 0], ['KPD', 95, 122], ['SA', 300, 340], ['ED', 360, 400], ['CBE', 470, 495]], c1),
+    ...mk(12603, 'Hyderabad Express', 'SCR', '16:10', '17:00', [['MAS', 0, 0], ['NLR', 190, 175], ['BZA', 430, 430], ['SC', 840, 700]], c2),
+    ...mk(12621, 'Tamil Nadu Express', 'CR', '22:30', '22:00', [['MAS', 0, 0], ['NLR', 190, 175], ['BZA', 430, 430], ['NGP', 1000, 1090], ['BPL', 1260, 1410], ['NDLS', 2020, 2182]], c2)];
+  return {
+    users: [{ id: 'U1', name: 'Admin', email: 'admin@rail.in', phone: '', pass: hs('admin123'), role: 'admin', blocked: false, created: today() },
+    { id: 'U2', name: 'Demo Traveller', email: 'rider@rail.in', phone: '9876543210', pass: hs('rider123'), role: 'user', blocked: false, created: today() },
+    { id: 'U3', name: 'Counter Agent', email: 'agent@rail.in', phone: '9000000000', pass: hs('agent123'), role: 'user', blocked: false, created: today() }],
+    stations, trains, bookings: [], payments: [], outbox: [], session: null,
+    fares: { SR: { SL: .55, '3A': 1.5, '2A': 2.2 }, SCR: { SL: .6, '3A': 1.6, '2A': 2.3 }, CR: { SL: .65, '3A': 1.7, '2A': 2.5 } },
+    surge: [{ date: plus(5), pct: 20, note: 'Festival rush' }],
+    rules: [{ hrs: 48, pct: 85 }, { hrs: 12, pct: 50 }, { hrs: 4, pct: 25 }, { hrs: 0, pct: 0 }]
+  };
+}
+let db; try { db = JSON.parse(localStorage.getItem(KEY)); } catch (e) { }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) { } };
+let fresh = false; if (!db || !db.trains) { db = seed(); fresh = true; }
+
+/* ---------- lookups and business rules ---------- */
+const me = () => db.users.find(u => u.id === db.session);
+const trn = id => db.trains.find(t => t.id === id);
+const stn = c => (db.stations.find(s => s.c === c) || { name: c }).name;
+const stLabel = c => `${stn(c)} (${c})`;
+const stp = (t, c) => t.stops.find(s => s.c === c);
+const ix = (t, c) => t.stops.findIndex(s => s.c === c);
+const depMin = (t, c) => mins(t.dep) + stp(t, c).t;
+const depTs = b => { const t = trn(b.tid); return new Date(b.date + 'T00:00').getTime() + depMin(t, b.from) * 6e4; };
+const resolve = x => { x = (x || '').trim().toLowerCase(); if (!x) return ''; const m = x.match(/\(([a-z]+)\)\s*$/), code = m ? m[1] : x; return (db.stations.find(s => s.c.toLowerCase() === code) || db.stations.find(s => s.name.toLowerCase().includes(x)) || {}).c || null; };
+const live_ = (tid, d, c) => db.bookings.filter(b => b.tid === tid && b.date === d && b.cls === c && b.status === 'Confirmed');
+function av(tid, d, c) {
+  const cap = trn(tid).cap[c] || 0, ps = live_(tid, d, c).flatMap(b => b.pax), cnf = ps.filter(p => p.st === 'CNF'), rac = ps.filter(p => p.st === 'RAC').length, wl = ps.filter(p => p.st === 'WL').length, free = cap - cnf.length;
+  const open = free > 0 || rac < RAC || wl < WLMAX;
+  return { cap, taken: new Set(cnf.map(p => p.seat)), free, rac, wl, open, k: free > 0 ? 'ok' : rac < RAC ? 'warn' : 'bad', txt: free > 0 ? 'AVL ' + free : rac < RAC ? 'RAC ' + (rac + 1) : wl < WLMAX ? 'WL ' + (wl + 1) : 'Closed' };
+}
+function fare(t, d, c, a, b) { // zone x class x date
+  const km = stp(t, b).km - stp(t, a).km, r = db.fares[t.zone][c], sur = (db.surge.find(x => x.date === d) || {}).pct || 0;
+  return Math.round((Math.max(km * r, 60) + { SL: 20, '3A': 40, '2A': 50 }[c]) * (1 + sur / 100));
+}
+function rebalance(tid, d, c) { // confirm, RAC, waiting list; promotes when seats free up
+  const cap = trn(tid).cap[c], ps = live_(tid, d, c).flatMap(b => b.pax), used = new Set(ps.filter(p => p.st === 'CNF').map(p => p.seat));
+  let free = [...Array(cap)].map((_, i) => i + 1).filter(s => !used.has(s)), r = 0, w = 0; const rest = ps.filter(p => p.st !== 'CNF');
+  rest.forEach(p => { if (p.want && free.includes(p.want)) { p.seat = p.want; p.st = 'CNF'; free = free.filter(s => s !== p.want); } });
+  rest.forEach(p => { if (p.st === 'CNF') return; if (free.length) { p.seat = free.shift(); p.st = 'CNF'; p.n = 0; } else if (r < RAC) { p.st = 'RAC'; p.seat = null; p.n = ++r; } else { p.st = 'WL'; p.seat = null; p.n = ++w; } });
+  ps.forEach(p => p.want = 0);
+}
+const newPnr = () => { let p; do { p = String(Math.floor(1e9 + Math.random() * 9e9)); } while (db.bookings.some(b => b.pnr === p)); return p; };
+function makeBooking(o) {
+  const t = trn(o.tid), v = av(o.tid, o.date, o.cls); if (!v.open) throw Error('Booking is closed for this class: the waiting list is full.');
+  const f = fare(t, o.date, o.cls, o.from, o.to), base = f * o.pax.length, tax = Math.round(base * .05), fee = 15, paid = o.mode !== 'Counter';
+  const b = { pnr: newPnr(), userId: o.u, tid: o.tid, no: t.no, name: t.name, from: o.from, to: o.to, date: o.date, cls: o.cls, pax: o.pax.map(p => ({ name: p.name, age: p.age, gender: p.gender, want: p.want || 0, st: null, seat: null, n: 0 })), contact: o.contact, fare: base, tax, fee, amount: base + tax + fee, mode: o.mode, payStatus: paid ? 'Paid' : 'Pending', payId: uid('PAY'), status: 'Confirmed', created: new Date().toISOString(), refund: null };
+  db.bookings.push(b); db.payments.push({ id: b.payId, pnr: b.pnr, userId: o.u, method: o.mode, amount: b.amount, status: b.payStatus, time: b.created });
+  rebalance(o.tid, o.date, o.cls); save(); return b;
+}
+function refundCalc(b) {
+  const hrs = (depTs(b) - Date.now()) / 36e5, rs = [...db.rules].sort((x, y) => y.hrs - x.hrs);
+  if (b.payStatus !== 'Paid') return { pct: 0, amt: 0, hrs, rule: 'Payment was not made, so there is nothing to refund.' };
+  if (hrs < 0) return { pct: 0, amt: 0, hrs, rule: 'The train has already departed.' };
+  if (b.pax.every(p => p.st === 'WL')) return { pct: 100, amt: b.fare + b.tax, hrs, rule: 'Fully waitlisted ticket: 100% of fare refunded.' };
+  const r = rs.find(x => hrs >= x.hrs), pct = r ? r.pct : 0;
+  return { pct, amt: Math.round((b.fare + b.tax) * pct / 100), hrs, rule: `Cancelled ${Math.floor(hrs)} hours before departure. The convenience fee is non-refundable.` };
+}
+const pst = p => p.st === 'CNF' ? `CNF · Berth ${p.seat} ${BT[(p.seat - 1) % 8]}` : p.st === 'RAC' ? 'RAC ' + p.n : 'WL ' + p.n;
+const pcls = p => p.st === 'CNF' ? 'ok' : p.st === 'RAC' ? 'warn' : 'bad';
+
+/* ---------- ui helpers ---------- */
+const app = h => { $('#app').innerHTML = h; };
+function toast(m, t = 'ok') { const e = document.createElement('div'); e.className = 'toast ' + t; e.textContent = m; $('#toasts').append(e); setTimeout(() => e.remove(), 3400); }
+function modal(h, wide) { $('#modal').innerHTML = `<div class="mbox ${wide ? 'wide' : ''}" role="dialog"><button class="x" onclick="closeModal()" aria-label="Close">×</button>${h}</div>`; $('#modal').classList.add('on'); }
+function closeModal() { $('#modal').classList.remove('on'); }
+function mail(to, subject, body) { const m = { id: uid('M'), to, subject, body, time: new Date().toISOString() }; db.outbox.push(m); save(); return m; }
+function showMail(m) { modal(`<h3>Email sent to ${esc(m.to)}</h3><p class="muted">Demo mode: nothing leaves your browser. Replace <code>mail()</code> with EmailJS, SMTP or your backend.</p><div class="mail"><b>${esc(m.subject)}</b><pre>${esc(m.body)}</pre></div>`, true); }
+function nav() {
+  const u = me();
+  $('#nav').innerHTML = `<a href="#/home">Trains</a><a href="#/status">PNR status</a><a href="#/cancel">Cancel ticket</a>${u ? '<a href="#/dashboard">My trips</a>' : ''}${u?.role === 'admin' ? '<a href="#/admin">Admin</a>' : ''}` +
+    (u ? `<button class="btn ghost sm" onclick="A.logout()">Log out (${esc(u.name.split(' ')[0])})</button>` : '<a href="#/login">Log in</a><a class="btn sm" href="#/register">Register</a>');
+  document.body.classList.remove('menu');
+}
+const nf = () => app('<div class="wrap page"><div class="empty">Page not found. <a href="#/home">Back to trains</a></div></div>');
+function guard(role) { const u = me(); if (!u) { sessionStorage.setItem('next', location.hash); location.hash = '#/login'; return false; } if (role && u.role !== role) { nf(); return false; } return true; }
+const badge = (t, c) => `<span class="badge ${(c || t).replace(/\s/g, '')}">${esc(t)}</span>`;
+function barcode(s) { let x = 0, o = ''; for (const c of s + s + s) { const w = (c.charCodeAt(0) % 3) + 1; o += `<rect x="${x}" y="0" width="${w}" height="54"/>`; x += w + ((c.charCodeAt(0) % 2) + 1); } return `<svg class="bars" viewBox="0 0 ${x} 54" preserveAspectRatio="none" aria-hidden="true">${o}</svg>`; }
+
+/* ---------- state / router ---------- */
+let S = { from: '', to: '', date: plus(2), n: 1, cls: '' }, F = null, ST = { pnr: '' }, TAB = 'overview', CUR = '';
+const R = { home, book, pay, ticket, status, cancel, login, register, dashboard, admin };
+function route() { const [p, a] = location.hash.replace(/^#\//, '').split('/'); CUR = p || 'home'; closeModal(); nav(); (R[CUR] || nf)(a); window.scrollTo(0, 0); }
+window.addEventListener('hashchange', route);
+setInterval(() => { // real-time seat availability
+  const l = $('#lv'); if (CUR === 'home' && $('#res')) $('#res').innerHTML = results();
+  else if (CUR === 'book' && F && $('#coach')) { F.seats = F.seats.filter(s => !av(F.tid, F.date, F.cls).taken.has(s)); $('#coach').innerHTML = coachHTML(); }
+  else if (CUR === 'status' && ST.pnr && $('#stres')) $('#stres').innerHTML = statusBody();
+  const l2 = $('#lv'); if (l2) l2.textContent = 'Live · ' + new Date().toLocaleTimeString('en-IN');
+}, 5000);
+window.addEventListener('storage', e => { if (e.key === KEY && e.newValue) db = JSON.parse(e.newValue); });
+
+/* ---------- search trains ---------- */
+function find() {
+  const a = resolve(S.from), b = resolve(S.to);
+  if (a === null || b === null) return { err: 'Station not found. Pick one from the suggestions.' };
+  if (!a || !b) return { hint: 1 }; if (a === b) return { err: 'Origin and destination are the same.' };
+  return { list: db.trains.filter(t => t.active && ix(t, a) >= 0 && ix(t, b) > ix(t, a)).sort((x, y) => depMin(x, a) - depMin(y, a)) };
+}
+function card(t) {
+  const a = resolve(S.from), b = resolve(S.to), d1 = depMin(t, a), d2 = depMin(t, b);
+  return `<article class="strip tr"><div class="st-t"><b>${tm(d1)}</b><span>${a}</span></div><div class="st-p"><i></i><em>${dur(d2 - d1)}</em><i></i></div><div class="st-t r"><b>${tm(d2)}${d2 >= 1440 ? `<sup>+${Math.floor(d2 / 1440)}</sup>` : ''}</b><span>${b}</span></div>
+  <div class="st-i"><div><b>${esc(t.name)}</b><small>${t.no} · ${stp(t, b).km - stp(t, a).km} km</small><div class="meta"><button class="lnk" onclick="A.via('${t.id}')">Route &amp; stops</button></div></div></div>
+  <div class="cls">${CK.filter(c => !S.cls || S.cls === c).map(c => { const v = av(t.id, S.date, c); return `<button class="cb ${v.k}" ${v.open ? '' : 'disabled'} onclick="A.pick('${t.id}','${c}')"><small>${c}</small><b>${inr(fare(t, S.date, c, a, b))}</b><span>${v.txt}</span></button>`; }).join('')}</div></article>`;
+}
+function results() {
+  const r = find(); if (r.err) return `<div class="empty">${r.err}</div>`;
+  if (r.hint) return `<div class="panel"><h3>Popular routes</h3><div class="chips" style="margin-top:12px">${[['MAS', 'SBC'], ['MAS', 'CBE'], ['MAS', 'SC'], ['MAS', 'NDLS'], ['KPD', 'MYS']].map(x => `<button class="chip" onclick="A.quick('${x[0]}','${x[1]}')">${stn(x[0])} → ${stn(x[1])}</button>`).join('')}</div><p class="muted" style="margin-top:12px">Enter an origin, destination and date above, or pick a route.</p></div>`;
+  return `<div class="sec-h"><h2>${r.list.length} train${r.list.length === 1 ? '' : 's'} · ${esc(stn(resolve(S.from)))} to ${esc(stn(resolve(S.to)))}</h2><span class="live" id="lv">Live · ${new Date().toLocaleTimeString('en-IN')}</span></div><p class="muted" style="margin-bottom:10px">${fmtD(S.date)} · AVL = berths free, RAC / WL = next queue number</p>` +
+    (r.list.length ? r.list.map(card).join('') : '<div class="empty">No trains run between these stations.</div>');
+}
+function scene() {
+  let w = '', arch = '', poles = '', cars = '';
+  for (let i = 0; i < 6; i++) { const cx = 100 + i * 200; arch += `<path d="M${cx - 72} 330A72 72 0 0 1 ${cx + 72} 330Z" fill="url(#ar)"/>`; }
+  for (const x of [120, 330, 540, 760, 990, 1170]) poles += `<rect x="${x}" y="150" width="5" height="110" fill="#323a9a"/>`;
+  for (const o of [0, 345]) { let win = ''; for (let i = 0; i < 9; i++) win += `<rect x="${o + 52 + i * 31}" y="208" width="20" height="8" rx="2" fill="#cdd2ff"/>`; cars += `<path d="M${o} 246H${o + 336}V204Q${o + 336} 196 ${o + 328} 196H${o + 50}Q${o + 14} 200 ${o} 246Z" fill="#2b3190"/><rect x="${o + 20}" y="203" width="310" height="3" fill="#e4e6ff"/>${win}<rect x="${o + 10}" y="228" width="326" height="4" fill="#6f78d8"/>`; }
+  return `<svg class="scene" viewBox="0 0 1200 330" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><defs><linearGradient id="sun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff7fa6"/><stop offset="1" stop-color="#ffc2d6" stop-opacity=".25"/></linearGradient><linearGradient id="ar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c9ccfa"/><stop offset="1" stop-color="#4b66d6"/></linearGradient></defs>
+  <circle cx="830" cy="215" r="135" fill="url(#sun)"/>
+  <polygon points="0,260 150,110 300,260 380,190 470,260 620,150 760,260 900,200 1020,260 1110,120 1200,210 1200,260" fill="#cfd1fb"/>
+  <polygon points="0,260 70,210 150,260 250,205 340,260 560,230 700,260 880,235 1040,260 1200,240 1200,260" fill="#a9aef0"/>
+  <g fill="#3a43a8"><rect x="-22" y="-22" width="44" height="44" transform="translate(95 135) rotate(45)"/><rect x="-18" y="-18" width="36" height="36" transform="translate(425 225) rotate(45)"/><rect x="-16" y="-16" width="32" height="32" transform="translate(965 215) rotate(45)"/></g>
+  ${poles}<path d="M0 185Q300 200 600 185T1200 185M0 190Q300 205 600 190T1200 190" stroke="#323a9a" stroke-width="1.2" fill="none"/>
+  <g class="trainmv">${cars}</g>
+  <rect x="0" y="246" width="1200" height="90" fill="#323a9a"/>${arch}<rect x="0" y="318" width="1200" height="12" fill="#4b66d6"/></svg>
+  <div class="logos wrap">${['Live availability', 'Instant PNR', 'Easy refunds', 'Secure payments', 'E-tickets'].map(x => `<span>${x}</span>`).join('')}</div>`;
+}
+function home() {
+  app(`<section class="hero2"><div class="wrap"><h1>Book your next train ticket</h1><p>Search trains across India, see live berth availability and get your PNR in seconds.</p>
+  <form class="search" onsubmit="A.search(event)">
+  <label class="f"><span>From</span><input name="from" list="apl" value="${esc(S.from)}" placeholder="Where are you travelling from?" autocomplete="off" required></label>
+  <button type="button" class="swap" onclick="A.swap()" aria-label="Swap stations">⇄</button>
+  <label class="f"><span>To</span><input name="to" list="apl" value="${esc(S.to)}" placeholder="Where are you going?" autocomplete="off" required></label>
+  <label class="f"><span>Journey date</span><input type="date" name="date" min="${today()}" value="${S.date}" required></label>
+  <label class="f"><span>Class</span><select name="cls"><option value="">All classes</option>${CK.map(c => `<option value="${c}" ${S.cls === c ? 'selected' : ''}>${c} · ${CL[c]}</option>`).join('')}</select></label>
+  <label class="f"><span>Passengers</span><select name="n">${[1, 2, 3, 4, 5, 6].map(n => `<option ${S.n === n ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+  <button class="btn go round" aria-label="Search trains">🔍︎</button><datalist id="apl">${db.stations.map(a => `<option value="${esc(a.name)} (${a.c})">`).join('')}</datalist></form></div></section>
+  <div id="scene" style="${S.from && S.to ? 'display:none' : ''}">${scene()}</div>
+  <section class="wrap cols"><div id="res">${results()}</div><aside><div class="panel"><h3>Already booked?</h3><p class="muted" style="margin:6px 0 14px">Check Confirmed, RAC or Waiting List with your PNR.</p><a class="btn dark" href="#/status">Check PNR status</a></div>
+  <div class="panel"><h3>Refund rules</h3><table>${[...db.rules].sort((a, b) => b.hrs - a.hrs).map(r => `<tr><td>${r.hrs ? r.hrs + '+ hours before' : 'Under ' + Math.min(...db.rules.map(x => x.hrs).filter(h => h > 0)) + ' hours'}</td><td><b>${r.pct}%</b></td></tr>`).join('')}</table><p class="muted" style="margin-top:10px">Share of fare returned on cancellation. Convenience fee is non-refundable.</p></div></aside></section>`);
+}
+
+/* ---------- booking ---------- */
+const chg = () => { const t = trn(F.tid), base = fare(t, F.date, F.cls, F.from, F.to) * F.n, tax = Math.round(base * .05); return { base, tax, fee: 15, tot: base + tax + 15 }; };
+function sumHTML() {
+  const t = trn(F.tid), c = chg(); return `<div class="panel sum"><h3>Journey summary</h3><div class="route" style="margin-top:12px"><div><b>${F.from}</b><small>${tm(depMin(t, F.from))}</small></div><div class="line"><span>${F.cls}</span></div><div class="r"><b>${F.to}</b><small>${tm(depMin(t, F.to))}</small></div></div>
+  <dl><dt>Train</dt><dd>${t.no} ${esc(t.name)}</dd><dt>Date</dt><dd>${fmtD(F.date)}</dd><dt>Passengers</dt><dd>${F.n}</dd><dt>Fare</dt><dd>${inr(c.base)}</dd><dt>GST (5%)</dt><dd>${inr(c.tax)}</dd><dt>Convenience fee</dt><dd>${inr(c.fee)}</dd></dl><div class="tot" style="margin-top:12px">Total ${inr(c.tot)}</div></div>`;
+}
+function coachHTML() {
+  const v = av(F.tid, F.date, F.cls); let h = '';
+  for (let s = 1; s <= v.cap; s++) { const tk = v.taken.has(s), sel = F.seats.includes(s); h += `<button type="button" class="sbtn ${tk ? 'tk' : sel ? 'sel' : ''}" ${tk ? 'disabled' : ''} onclick="A.seat(${s})"><b>${s}</b><br>${BT[(s - 1) % 8]}</button>`; }
+  return (v.free < F.n ? `<div class="banner">Only ${v.free} berth${v.free === 1 ? '' : 's'} free. The remaining passengers will be ${v.rac < RAC ? 'RAC' : 'waitlisted'}.</div>` : '') + `<div class="coach">${h}</div><div class="legend"><span><i style="background:#f1efff"></i>Available</span><span><i style="background:var(--gold)"></i>Selected</span><span><i style="background:#d8d5ee"></i>Booked</span></div>`;
+}
+function book() {
+  if (!guard()) return; if (!F) { location.hash = '#/home'; return; } const u = me();
+  app(`<div class="wrap page"><a class="crumb" href="#/home">← Back to trains</a><div class="stepper"><span class="on">1 Passengers &amp; berths</span><span>2 Payment</span><span>3 Ticket</span></div><div class="bk"><div>
+  <div class="panel"><div class="sec-h"><h3>Choose berths</h3><span class="live" id="lv">Live</span></div><p class="muted">Pick up to ${F.n}. Unpicked passengers are auto-allocated.</p><div id="coach">${coachHTML()}</div></div>
+  <form class="panel stack" onsubmit="A.toPay(event)"><h3>Passenger details</h3>
+  ${Array.from({ length: F.n }, (_, i) => `<div class="pax"><h4>Passenger ${i + 1}</h4><div style="display:grid;grid-template-columns:110px 1fr 90px;gap:12px"><label>Gender<select name="g${i}"><option>M</option><option>F</option><option>O</option></select></label><label>Full name<input name="n${i}" required maxlength="40" value="${i === 0 ? esc(u.name) : ''}"></label><label>Age<input name="a${i}" type="number" min="1" max="120" required></label></div></div>`).join('')}
+  <div class="row2"><label>Email for ticket<input name="email" type="email" required value="${esc(u.email)}"></label><label>Mobile<input name="phone" required pattern="[0-9]{10}" placeholder="10 digits" value="${esc(u.phone)}"></label></div><button class="btn lg">Continue to payment</button></form></div>${sumHTML()}</div></div>`);
+}
+
+/* ---------- payment ---------- */
+function pay() {
+  if (!guard()) return; if (!F || !F.pax) { location.hash = '#/home'; return; }
+  app(`<div class="wrap page"><a class="crumb" href="#/book">← Edit passengers</a><div class="stepper"><span class="done">1 Passengers</span><span class="on">2 Payment</span><span>3 Ticket</span></div><div class="bk"><form class="panel" onsubmit="A.payNow(event)"><h3>Choose payment mode</h3><div class="pm" style="margin-top:14px">
+  <label><input type="radio" name="m" value="UPI" checked><span><b>UPI (online)</b>Instant. Ticket and PNR generated on success.</span></label>
+  <label><input type="radio" name="m" value="Card"><span><b>Debit / credit card (online)</b>Secure gateway, demo only.</span></label>
+  <label><input type="radio" name="m" value="Netbanking"><span><b>Net banking (online)</b>Redirects to your bank in a live system.</span></label>
+  <label><input type="radio" name="m" value="Counter"><span><b>Pay at counter (offline)</b>Berths held; ticket is valid once the counter confirms payment.</span></label></div>
+  <label style="margin-bottom:16px">UPI ID / card number (demo, not stored)<input name="ref" placeholder="name@bank"></label><button class="btn lg">Confirm &amp; pay ${inr(chg().tot)}</button></form>${sumHTML()}</div></div>`);
+}
+
+/* ---------- ticket, status, cancel ---------- */
+function passHTML(b) {
+  const t = trn(b.tid), d1 = depMin(t, b.from), d2 = depMin(t, b.to), ok = b.status === 'Confirmed';
+  return `<div class="pass">${ok ? '' : '<div class="stamp">CANCELLED</div>'}<div class="p-band" style="background:#33399b"><b>${b.no} · ${esc(b.name)}</b><span>${fmtD(b.date)} · ${b.cls} ${CL[b.cls]}</span></div>
+  <div class="p-main"><div class="codes"><div><h2>${b.from}</h2><small>${esc(stn(b.from))}</small><small>Dep ${tm(d1)}</small></div><div>🚆</div><div class="r"><h2>${b.to}</h2><small>${esc(stn(b.to))}</small><small>Arr ${tm(d2)}${d2 >= 1440 ? ' +' + Math.floor(d2 / 1440) : ''}</small></div></div>
+  <table><tr><th>Passenger</th><th>Age / Sex</th><th>Status</th></tr>${b.pax.map(p => `<tr><td>${esc(p.name)}</td><td>${p.age} / ${p.gender}</td><td><span class="pill ${pcls(p)}">${pst(p)}</span></td></tr>`).join('')}</table>
+  <div class="grid4"><div><small>Fare</small><b>${inr(b.fare)}</b></div><div><small>GST + fee</small><b>${inr(b.tax + b.fee)}</b></div><div><small>Total</small><b>${inr(b.amount)}</b></div><div><small>Payment</small><b>${esc(b.mode)} · ${b.payStatus}</b></div></div></div>
+  <div class="p-stub"><div><small>PNR</small><div class="pnr">${b.pnr}</div></div>${barcode(b.pnr)}<div>${badge(b.status)}</div></div><span class="n1"></span><span class="n2"></span></div>`;
+}
+const myB = p => { const u = me(); return db.bookings.find(x => x.pnr === p && (x.userId === u.id || u.role === 'admin')); };
+function ticket(p) {
+  if (!guard()) return; const b = myB(p); if (!b) return nf();
+  app(`<div class="wrap page"><div class="no-print sec-h"><a class="crumb" href="#/dashboard">← My trips</a><div class="acts"><button class="btn" onclick="window.print()">Print ticket</button><a class="btn ghost" href="#/status/${b.pnr}">PNR status</a></div></div>${b.payStatus === 'Pending' ? '<div class="banner no-print">Offline payment pending: pay at the counter and quote this PNR. Unpaid tickets are not valid for travel.</div>' : ''}${passHTML(b)}<p class="muted no-print" style="text-align:center">Carry a valid photo ID. A confirmation email was sent to ${esc(b.contact.email)}.</p></div>`);
+}
+function statusBody() {
+  const b = db.bookings.find(x => x.pnr === ST.pnr.trim()); if (!b) return '<div class="empty">No booking found for that PNR. Check the 10 digits.</div>';
+  return `<div class="panel" style="margin-top:18px"><div class="sec-h"><div><span class="pnr">${b.pnr}</span><br><b>${b.no} ${esc(b.name)}</b> · ${stLabel(b.from)} → ${stLabel(b.to)} · ${fmtD(b.date)} · ${b.cls}</div><span class="live" id="lv">Live</span></div>
+  <div class="scroll"><table><tr><th>#</th><th>Passenger</th><th>Current status</th></tr>${b.pax.map((p, i) => `<tr><td>${i + 1}</td><td>${esc(p.name)}</td><td>${b.status === 'Cancelled' ? badge('Cancelled') : `<span class="pill ${pcls(p)}">${pst(p)}</span>`}</td></tr>`).join('')}</table></div><small>RAC and waiting-list tickets move up automatically when others cancel.</small></div>`;
+}
+function status(p) {
+  if (p) ST.pnr = p;
+  app(`<div class="wrap page"><div class="auth panel" style="max-width:640px"><h1>PNR status</h1><p class="muted">Enter your 10-digit PNR.</p><form class="stack" style="margin-top:18px" onsubmit="A.track(event)"><label>PNR number<input name="pnr" inputmode="numeric" maxlength="10" required value="${esc(ST.pnr)}"></label><button class="btn">Check status</button></form><div id="stres">${ST.pnr ? statusBody() : ''}</div></div></div>`);
+}
+function cancel(p) {
+  if (!guard()) return; const b = p && myB(p);
+  const look = `<form class="stack" onsubmit="A.lookCancel(event)"><label>PNR number<input name="pnr" inputmode="numeric" maxlength="10" required value="${esc(p || '')}"></label><button class="btn">Find ticket</button></form>`;
+  let body = ''; if (p && !b) body = '<div class="empty" style="margin-top:16px">No ticket with that PNR on your account.</div>';
+  else if (b) { const r = refundCalc(b); body = b.status !== 'Confirmed' ? '<div class="banner bad" style="margin-top:16px">This ticket is already cancelled.</div>' : `<div style="margin-top:18px">${passHTML(b)}<div class="panel"><h3>Refund estimate</h3><p class="muted" style="margin:8px 0">${esc(r.rule)}</p><div class="cards"><div class="stat"><small>Refundable %</small><b>${r.pct}%</b></div><div class="stat"><small>Estimated refund</small><b>${inr(r.amt)}</b></div></div><p class="muted">The admin reviews the request and releases the final amount to your original payment mode.</p><button class="btn danger" style="margin-top:12px" onclick="A.doCancel('${b.pnr}')">Cancel ticket</button></div></div>`; }
+  app(`<div class="wrap page"><div class="auth panel" style="max-width:760px"><h1>Cancel ticket</h1><p class="muted" style="margin-bottom:18px">Enter your PNR and send a cancellation request.</p>${look}${body}</div></div>`);
+}
+
+/* ---------- auth ---------- */
+function authBox(title, sub, form, alt) { app(`<div class="wrap"><div class="auth panel"><h1>${title}</h1><p class="muted">${sub}</p>${form}<div class="alt">${alt}</div></div></div>`); }
+function login() { authBox('Log in', 'Log in to reserve tickets and manage trips.', '<form class="stack" onsubmit="A.login(event)"><label>Email<input name="email" type="email" required></label><label>Password<input name="pass" type="password" required></label><div class="err" id="err"></div><button class="btn lg">Log in</button></form><p class="muted" style="margin-top:14px;font-size:13px">Demo: <code>rider@rail.in</code> / <code>rider123</code> · Admin: <code>admin@rail.in</code> / <code>admin123</code></p>', '<a href="#/register">Create account</a>'); }
+function register() { authBox('Create account', 'One account for every journey.', '<form class="stack" onsubmit="A.register(event)"><label>Full name<input name="name" required></label><label>Email<input name="email" type="email" required></label><label>Mobile<input name="phone" pattern="[0-9]{10}" required></label><label>Password (6+ chars)<input name="pass" type="password" minlength="6" required></label><div class="err" id="err"></div><button class="btn lg">Register</button></form>', '<a href="#/login">Already registered? Log in</a>'); }
+
+/* ---------- dashboard ---------- */
+function dashboard() {
+  if (!guard()) return; const u = me(), bs = db.bookings.filter(b => b.userId === u.id).reverse();
+  app(`<div class="wrap page"><div class="sec-h"><h2>My trips</h2><a class="btn" href="#/home">Book a train</a></div><p class="muted" style="margin-bottom:18px">Booking history for ${esc(u.name)}. Reprint tickets any time.</p>${bs.length ? bs.map(b => {
+    const up = b.status === 'Confirmed' && depTs(b) > Date.now(); return `<div class="trip" style="--c:${b.status === 'Confirmed' ? 'var(--gold)' : 'var(--bad)'}"><div class="d">${new Date(b.date + 'T00:00').toLocaleDateString('en-IN', { month: 'short' }).toUpperCase()}<b>${b.date.slice(8)}</b></div>
+    <div><b>${b.from} → ${b.to}</b> · ${b.no} ${esc(b.name)}<br><small>PNR ${b.pnr} · ${b.cls} · ${b.pax.length} pax · ${inr(b.amount)}</small><div class="meta">${badge(b.status)}${badge(b.payStatus)}${b.refund ? badge('Refund ' + b.refund.state, b.refund.state) : ''}${b.status === 'Confirmed' ? b.pax.map(p => `<span class="pill ${pcls(p)}">${pst(p)}</span>`).join('') : ''}</div></div>
+    <div class="acts"><a class="btn sm" href="#/ticket/${b.pnr}">Ticket</a><a class="btn sm ghost" href="#/status/${b.pnr}">Status</a>${up ? `<a class="btn sm danger" href="#/cancel/${b.pnr}">Cancel</a>` : ''}</div></div>`; }).join('') : '<div class="empty">No bookings yet. <a href="#/home">Find a train</a></div>'}</div>`);
+}
+
+/* ---------- admin ---------- */
+const TABS = [['overview', 'Overview'], ['trains', 'Trains & seats'], ['fares', 'Fares & rules'], ['bookings', 'Bookings & payments'], ['refunds', 'Refunds'], ['users', 'Users']];
+function adminBody() {
+  const paid = db.payments.reduce((s, p) => s + (p.status === 'Paid' || p.status === 'Refunded' ? p.amount : 0), 0), tbl = (h, rows) => `<div class="scroll"><table><tr>${h.map(x => `<th>${x}</th>`).join('')}</tr>${rows || `<tr><td colspan="${h.length}" class="muted">Nothing here yet.</td></tr>`}</table></div>`;
+  if (TAB === 'overview') return `<h2>Overview</h2><div class="cards"><div class="stat"><small>Tickets</small><b>${db.bookings.length}</b></div><div class="stat"><small>Net collected</small><b>${inr(paid)}</b></div><div class="stat"><small>Refunds pending</small><b>${db.bookings.filter(b => b.refund?.state === 'Requested').length}</b></div><div class="stat"><small>Users</small><b>${db.users.length}</b></div></div><div class="sec-h"><h3>Payment details (sent to admin)</h3></div>` +
+    tbl(['Payment', 'PNR', 'Mode', 'Amount', 'Status', 'Time'], db.payments.slice(-12).reverse().map(p => `<tr><td><code>${p.id}</code></td><td>${p.pnr}</td><td>${esc(p.method)}</td><td>${inr(p.amount)}</td><td>${badge(p.status)}</td><td>${fmtDT(p.time)}</td></tr>`).join('')) + `<div class="sec-h"><h3>Email outbox</h3></div>` + tbl(['To', 'Subject', ''], db.outbox.slice(-6).reverse().map(m => `<tr><td>${esc(m.to)}</td><td>${esc(m.subject)}</td><td><button class="lnk" onclick="A.mail('${m.id}')">Open</button></td></tr>`).join(''));
+  if (TAB === 'trains') return `<div class="sec-h"><h2>Trains &amp; seats</h2><button class="btn" onclick="A.trainForm()">Add train</button></div>` + tbl(['No.', 'Name', 'Route', 'Dep', 'SL / 3A / 2A', 'Status', ''], db.trains.map(t => `<tr><td>${t.no}</td><td>${esc(t.name)}</td><td>${t.stops[0].c} → ${t.stops.at(-1).c} (${t.stops.length} stops)</td><td>${t.dep}</td><td>${CK.map(c => t.cap[c]).join(' / ')}</td><td>${badge(t.active ? 'Running' : 'Suspended', t.active ? 'Confirmed' : 'Cancelled')}</td><td class="acts"><button class="btn sm dark" onclick="A.trainForm('${t.id}')">Edit</button><button class="btn sm ghost" onclick="A.toggleTrain('${t.id}')">${t.active ? 'Suspend' : 'Resume'}</button></td></tr>`).join(''));
+  if (TAB === 'fares') return `<h2>Fares &amp; refund rules</h2><form onsubmit="A.saveFares(event)"><div class="sec-h"><h3>Fare per km by zone and class</h3></div>${tbl(['Zone', ...CK], Object.keys(db.fares).map(z => `<tr><td><b>${z}</b></td>${CK.map(c => `<td><input name="${z}_${c}" type="number" step="0.01" min="0" value="${db.fares[z][c]}"></td>`).join('')}</tr>`).join(''))}
+  <div class="sec-h"><h3>Refund rules</h3></div>${tbl(['Hours before departure (min)', 'Refundable %'], db.rules.map((r, i) => `<tr><td><input name="rh${i}" type="number" min="0" value="${r.hrs}"></td><td><input name="rp${i}" type="number" min="0" max="100" value="${r.pct}"></td></tr>`).join(''))}<button class="btn">Save fares &amp; rules</button></form>
+  <div class="sec-h" style="margin-top:28px"><h3>Date-wise surcharges</h3></div>${tbl(['Date', 'Surcharge', 'Note', ''], db.surge.map((s, i) => `<tr><td>${fmtD(s.date)}</td><td>+${s.pct}%</td><td>${esc(s.note)}</td><td><button class="btn sm danger" onclick="A.delSurge(${i})">Remove</button></td></tr>`).join(''))}
+  <form class="filters" onsubmit="A.addSurge(event)"><label>Date<input type="date" name="d" required></label><label>Surcharge %<input type="number" name="p" min="1" max="100" required></label><label>Note<input name="n"></label><button class="btn">Add</button></form>`;
+  if (TAB === 'bookings') return `<h2>Bookings &amp; payments</h2>` + tbl(['PNR', 'User', 'Train', 'Date', 'Cls', 'Pax', 'Amount', 'Payment', 'Status', ''], db.bookings.slice().reverse().map(b => `<tr><td>${b.pnr}</td><td>${esc((db.users.find(u => u.id === b.userId) || {}).name)}</td><td>${b.no}</td><td>${b.date}</td><td>${b.cls}</td><td>${b.pax.length}</td><td>${inr(b.amount)}</td><td>${badge(b.payStatus)} <small>${esc(b.mode)}</small></td><td>${badge(b.status)}</td><td>${b.payStatus === 'Pending' && b.status === 'Confirmed' ? `<button class="btn sm green" onclick="A.markPaid('${b.pnr}')">Mark paid</button>` : ''}</td></tr>`).join(''));
+  if (TAB === 'refunds') return `<h2>Refund requests</h2><p class="muted" style="margin-bottom:14px">Review the computed amount, adjust if needed and release it to the passenger.</p>` + tbl(['PNR', 'Passenger account', 'Paid', 'Rule %', 'Refund to pass', 'State'], db.bookings.filter(b => b.refund && b.refund.state !== 'None').reverse().map(b => `<tr><td>${b.pnr}</td><td>${esc((db.users.find(u => u.id === b.userId) || {}).email)}</td><td>${inr(b.amount)}</td><td>${b.refund.pct}%</td><td>${b.refund.state === 'Requested' ? `<div class="acts"><input id="rf${b.pnr}" type="number" min="0" max="${b.amount}" value="${b.refund.calc}" style="width:110px"><button class="btn sm" onclick="A.refund('${b.pnr}')">Pass refund</button></div>` : inr(b.refund.amt)}</td><td>${badge(b.refund.state)}</td></tr>`).join(''));
+  return `<h2>Users</h2>` + tbl(['Name', 'Email', 'Phone', 'Role', 'Tickets', ''], db.users.map(u => `<tr><td>${esc(u.name)}</td><td>${esc(u.email)}</td><td>${esc(u.phone)}</td><td>${u.role}</td><td>${db.bookings.filter(b => b.userId === u.id).length}</td><td>${u.role === 'admin' ? '' : `<button class="btn sm ${u.blocked ? 'green' : 'danger'}" onclick="A.block('${u.id}')">${u.blocked ? 'Unblock' : 'Block'}</button>`}</td></tr>`).join(''));
+}
+function admin() { if (!guard('admin')) return; app(`<div class="wrap page"><div class="adm"><aside class="rail"><h3>Control room</h3>${TABS.map(t => `<button class="rail-b ${TAB === t[0] ? 'on' : ''}" onclick="A.tab('${t[0]}')">${t[1]}</button>`).join('')}</aside><div class="adm-main" id="am">${adminBody()}</div></div></div>`); }
+const reA = () => { if (CUR === 'admin') { const y = scrollY; admin(); scrollTo(0, y); } };
+
+/* ---------- actions ---------- */
+const A = {
+  search(e) { e.preventDefault(); const f = new FormData(e.target); S = { from: f.get('from'), to: f.get('to'), date: f.get('date'), cls: f.get('cls'), n: +f.get('n') }; $('#res').innerHTML = results(); $('#scene').style.display = 'none'; },
+  swap() { const f = $('.search'); [f.from.value, f.to.value] = [f.to.value, f.from.value]; },
+  quick(a, b) { S.from = stLabel(a); S.to = stLabel(b); home(); },
+  via(id) { const t = trn(id); modal(`<h3>${t.no} ${esc(t.name)}</h3><p class="muted">Zone ${t.zone} · departs origin ${t.dep}</p><div class="scroll"><table><tr><th>Station</th><th>Time</th><th>Distance</th></tr>${t.stops.map(s => `<tr><td>${esc(stn(s.c))} (${s.c})</td><td>${tm(mins(t.dep) + s.t)}${mins(t.dep) + s.t >= 1440 ? ' +' + Math.floor((mins(t.dep) + s.t) / 1440) : ''}</td><td>${s.km} km</td></tr>`).join('')}</table></div>`, true); },
+  pick(tid, cls) { if (!me()) { sessionStorage.setItem('next', '#/book'); } F = { tid, cls, date: S.date, from: resolve(S.from), to: resolve(S.to), n: S.n, seats: [], pax: null }; location.hash = '#/book'; if (CUR === 'book') route(); },
+  seat(s) { const i = F.seats.indexOf(s); if (i >= 0) F.seats.splice(i, 1); else if (F.seats.length < F.n) F.seats.push(s); else toast('You can pick ' + F.n + ' berth(s) only.', 'err'); $('#coach').innerHTML = coachHTML(); },
+  toPay(e) {
+    e.preventDefault(); const f = new FormData(e.target); F.pax = Array.from({ length: F.n }, (_, i) => ({ name: f.get('n' + i).trim(), age: +f.get('a' + i), gender: f.get('g' + i), want: F.seats[i] || 0 }));
+    F.contact = { email: f.get('email'), phone: f.get('phone') }; location.hash = '#/pay';
+  },
+  payNow(e) {
+    e.preventDefault(); const m = new FormData(e.target).get('m');
+    modal('<div style="text-align:center"><div class="spin"></div><h3>' + (m === 'Counter' ? 'Holding your berths…' : 'Processing secure payment…') + '</h3><p class="muted">Please do not close this window.</p></div>');
+    setTimeout(() => {
+      try {
+        const b = makeBooking({ u: me().id, tid: F.tid, date: F.date, cls: F.cls, from: F.from, to: F.to, pax: F.pax, mode: m, contact: F.contact });
+        const body = `Dear ${me().name},\n\nYour booking is ${b.payStatus === 'Paid' ? 'confirmed' : 'held, pending counter payment'}.\n\nPNR: ${b.pnr}\nTrain: ${b.no} ${b.name}\n${stLabel(b.from)} → ${stLabel(b.to)}\nDate: ${fmtD(b.date)} · Class ${b.cls}\n${b.pax.map(p => '  ' + p.name + ' — ' + pst(p)).join('\n')}\nAmount: ${inr(b.amount)} (${b.mode})\n\nHave a safe journey.\nMeridian Rail`;
+        const em = mail(b.contact.email, 'Booking confirmation · PNR ' + b.pnr, body);
+        mail('admin@rail.in', 'Payment received · PNR ' + b.pnr, `Payment ${b.payId}: ${inr(b.amount)} via ${b.mode} (${b.payStatus}).`);
+        F = null; location.hash = '#/ticket/' + b.pnr; toast('Booked. PNR ' + b.pnr); setTimeout(() => showMail(em), 400);
+      } catch (x) { closeModal(); toast(x.message, 'err'); }
+    }, 1300);
+  },
+  track(e) { e.preventDefault(); ST.pnr = new FormData(e.target).get('pnr'); $('#stres').innerHTML = statusBody(); },
+  lookCancel(e) { e.preventDefault(); location.hash = '#/cancel/' + new FormData(e.target).get('pnr').trim(); },
+  doCancel(p) {
+    const b = myB(p); if (!b || b.status !== 'Confirmed' || !confirm('Cancel this ticket? This cannot be undone.')) return;
+    const r = refundCalc(b); b.status = 'Cancelled'; b.refund = { state: r.amt > 0 ? 'Requested' : 'None', pct: r.pct, calc: r.amt, amt: 0, time: new Date().toISOString() };
+    rebalance(b.tid, b.date, b.cls); save(); mail(b.contact.email, 'Cancellation received · PNR ' + b.pnr, `Your ticket is cancelled. Estimated refund ${inr(r.amt)} (${r.pct}%). The admin will release the amount shortly.`);
+    mail('admin@rail.in', 'Refund request · PNR ' + b.pnr, `Passenger cancelled. Refundable: ${inr(r.amt)}.`); toast('Ticket cancelled'); location.hash = '#/dashboard';
+  },
+  login(e) {
+    e.preventDefault(); const f = new FormData(e.target), u = db.users.find(x => x.email === f.get('email').trim().toLowerCase() && x.pass === hs(f.get('pass')));
+    if (!u) return $('#err').textContent = 'Wrong email or password.'; if (u.blocked) return $('#err').textContent = 'This account is blocked. Contact the railway office.';
+    db.session = u.id; save(); const n = sessionStorage.getItem('next'); sessionStorage.removeItem('next'); location.hash = n || (u.role === 'admin' ? '#/admin' : '#/dashboard');
+  },
+  register(e) {
+    e.preventDefault(); const f = new FormData(e.target), em = f.get('email').trim().toLowerCase(); if (db.users.some(u => u.email === em)) return $('#err').textContent = 'That email is already registered.';
+    const u = { id: uid('U'), name: f.get('name').trim(), email: em, phone: f.get('phone'), pass: hs(f.get('pass')), role: 'user', blocked: false, created: today() }; db.users.push(u); db.session = u.id; save(); location.hash = sessionStorage.getItem('next') || '#/dashboard'; sessionStorage.removeItem('next');
+  },
+  logout() { db.session = null; save(); location.hash = '#/home'; route(); },
+  tab(t) { TAB = t; reA(); },
+  mail(id) { showMail(db.outbox.find(m => m.id === id)); },
+  toggleTrain(id) { const t = trn(id); t.active = !t.active; save(); reA(); },
+  trainForm(id) {
+    const t = id ? trn(id) : { no: '', name: '', zone: 'SR', dep: '08:00', stops: [], cap: { SL: 12, '3A': 8, '2A': 6 } };
+    modal(`<h3>${id ? 'Edit' : 'Add'} train</h3><form class="stack" onsubmit="A.saveTrain(event,'${id || ''}')"><div class="row2"><label>Number<input name="no" type="number" required value="${t.no}"></label><label>Name<input name="name" required value="${esc(t.name)}"></label></div><div class="row2"><label>Fare zone<select name="zone">${Object.keys(db.fares).map(z => `<option ${z === t.zone ? 'selected' : ''}>${z}</option>`).join('')}</select></label><label>Departure<input name="dep" type="time" required value="${t.dep}"></label></div>
+    <label>Stops (CODE:minutes from start:km, comma separated)<textarea name="stops" required>${t.stops.map(s => `${s.c}:${s.t}:${s.km}`).join(', ')}</textarea></label><div class="row2">${CK.map(c => `<label>${c} berths<input name="c${c}" type="number" min="0" value="${t.cap[c]}"></label>`).join('')}</div><button class="btn">Save train</button></form>`);
+  },
+  saveTrain(e, id) {
+    e.preventDefault(); const f = new FormData(e.target), stops = f.get('stops').split(',').map(x => x.trim().split(':')).map(a => ({ c: a[0].toUpperCase(), t: +a[1], km: +a[2] }));
+    if (stops.length < 2 || stops.some(s => !s.c || isNaN(s.t) || isNaN(s.km))) return toast('Stops must look like MAS:0:0, KPD:95:122', 'err');
+    stops.forEach(s => { if (!db.stations.some(x => x.c === s.c)) db.stations.push({ c: s.c, name: s.c }); });
+    const d = { no: +f.get('no'), name: f.get('name'), zone: f.get('zone'), dep: f.get('dep'), stops, cap: { SL: +f.get('cSL'), '3A': +f.get('c3A'), '2A': +f.get('c2A') } };
+    if (id) Object.assign(trn(id), d); else db.trains.push({ id: 'T' + d.no, active: true, ...d }); save(); closeModal(); reA(); toast('Train saved');
+  },
+  saveFares(e) { e.preventDefault(); const f = new FormData(e.target); Object.keys(db.fares).forEach(z => CK.forEach(c => db.fares[z][c] = +f.get(z + '_' + c))); db.rules = db.rules.map((_, i) => ({ hrs: +f.get('rh' + i), pct: +f.get('rp' + i) })); save(); toast('Fares and refund rules saved'); },
+  addSurge(e) { e.preventDefault(); const f = new FormData(e.target); db.surge.push({ date: f.get('d'), pct: +f.get('p'), note: f.get('n') || 'Surcharge' }); save(); reA(); },
+  delSurge(i) { db.surge.splice(i, 1); save(); reA(); },
+  markPaid(p) { const b = db.bookings.find(x => x.pnr === p); b.payStatus = 'Paid'; const py = db.payments.find(x => x.id === b.payId); if (py) py.status = 'Paid'; save(); mail(b.contact.email, 'Payment received · PNR ' + p, 'Your counter payment is confirmed. Your ticket is now valid.'); reA(); toast('Marked paid'); },
+  refund(p) {
+    const b = db.bookings.find(x => x.pnr === p), v = +$('#rf' + p).value; if (isNaN(v) || v < 0 || v > b.amount) return toast('Enter a valid amount', 'err');
+    b.refund.state = 'Refunded'; b.refund.amt = v; db.payments.push({ id: uid('RF'), pnr: p, userId: b.userId, method: 'Refund to ' + b.mode, amount: -v, status: 'Refunded', time: new Date().toISOString() });
+    save(); mail(b.contact.email, 'Refund released · PNR ' + p, `${inr(v)} has been refunded to your original payment mode.`); reA(); toast('Refund of ' + inr(v) + ' passed');
+  },
+  block(id) { const u = db.users.find(x => x.id === id); u.blocked = !u.blocked; save(); reA(); }
+};
+if (fresh) { // demo: a full Sleeper coach so RAC / waiting list can be seen
+  const pax = k => Array.from({ length: k }, (_, i) => ({ name: 'Guest ' + (i + 1), age: 30, gender: 'M' }));
+  for (let i = 0; i < 4; i++) makeBooking({ u: 'U3', tid: 'T12007', date: plus(2), cls: 'SL', from: 'MAS', to: 'MYS', pax: pax(4), mode: 'UPI', contact: { email: 'agent@rail.in', phone: '9000000000' } });
+  const b = makeBooking({ u: 'U2', tid: 'T12603', date: plus(4), cls: '3A', from: 'MAS', to: 'SC', pax: [{ name: 'Demo Traveller', age: 28, gender: 'M', want: 3 }], mode: 'Card', contact: { email: 'rider@rail.in', phone: '9876543210' } });
+  db.payments.find(p => p.pnr === b.pnr).pnr = b.pnr = '4521098765'; save();
+}
+
+route();
+
+</script>
+</body>
+</html>
